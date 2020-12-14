@@ -13,6 +13,7 @@ namespace StereoLog
             public string Text;
             public string URL;
             public int Page;
+            public string[] IncludingElements;
         }
         public class Element
         {

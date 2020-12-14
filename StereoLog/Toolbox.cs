@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using static StereoLog.Classes;
 
@@ -25,11 +26,16 @@ namespace StereoLog
                         {
                             var iArticle = new Article();
                             iArticle.Title = Files[i].Split(new char[] { '/', '\\' }).Last().Replace(".md", "");
-                            iArticle.Text = Markdig.Markdown.ToHtml(System.IO.File.ReadAllText(Files[i]));
-                            iArticle.Date = System.IO.File.GetCreationTime(Path);
-                            iArticle.URL = $"/{iArticle.Date.ToString("dd-MMMM-yyyy")}-{RemoveSpecialChars(iArticle.Title.Replace(" ", "-"))}";
-                            iArticle.Page = 10 / i + 1;
-                            ArticleList.Add(iArticle);
+                            if (!iArticle.Title.ToLower().StartsWith("#"))
+                            {
+                                iArticle.Text = Markdig.Markdown.ToHtml(System.IO.File.ReadAllText(Files[i]));
+                                iArticle.Date = System.IO.File.GetCreationTime(Path);
+                                iArticle.URL = $"/read/{iArticle.Date.ToString("dd-MMMM-yyyy")}-{RemoveSpecialChars(iArticle.Title.Replace(" ", "-"))}";
+                                iArticle.Page = 10 / (i + 1);
+                                iArticle.IncludingElements = GetHashTags(iArticle.Text);
+
+                                ArticleList.Add(iArticle);
+                            }
                         }
                         catch { }
                     }
@@ -92,6 +98,33 @@ namespace StereoLog
                 }
             }
             return HashTags.ToArray();
+        }
+
+        public static void GetUpdates()
+        {
+            var URL = "https://github.com/thebitbrine/StereoLog/commits/master";
+            try
+            {
+                var HTML = new WebClient().DownloadString(URL);
+                var LastCommit = DateTime.Parse(GetBetween(HTML, "<relative-time datetime=\"", "\""));
+                Console.WriteLine();
+            }
+            catch { }
+        }
+
+        public static string GetBetween(string strSource, string strStart, string strEnd)
+        {
+            int Start, End;
+            if (!string.IsNullOrWhiteSpace(strSource) && strSource.Contains(strStart) && strSource.Contains(strEnd))
+            {
+                Start = strSource.IndexOf(strStart, 0) + strStart.Length;
+                End = strSource.IndexOf(strEnd, Start);
+                return strSource.Substring(Start, End - Start);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static string RemoveSpecialChars(string str)

@@ -297,8 +297,10 @@ namespace TheBitBrine
                     if (RequestedEndpoint.Contains('?'))
                         RequestedEndpoint = RequestedEndpoint.Split('?')[0];
 
-                    if (_Endpoints.ContainsKey(RequestedEndpoint))
-                        _Endpoints[RequestedEndpoint](context);
+                    if (_Endpoints.Keys.Any(x => RequestedEndpoint.StartsWith(x))) {
+                        var iEndpoint = _Endpoints.Keys.Where(x => RequestedEndpoint.StartsWith(x)).First();
+                        _Endpoints[iEndpoint](context);
+                    }
                     if (File.Exists($"HTML/{RequestedEndpoint}"))
                     {
                         Respond(File.ReadAllText($"HTML/{RequestedEndpoint}"), context, HttpStatusCode.OK);

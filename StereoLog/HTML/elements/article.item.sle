@@ -1,0 +1,7 @@
+<div class="article-item">
+	<h1 class="article-title">##TITLE##</h1>
+	<p class="article-date">- ##DATE##</p>
+	<div class="article-text">##TEXT##</div>
+	##READMORE.ITEM##
+</div>
+			

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 
 namespace TheBitBrine
@@ -152,6 +153,8 @@ namespace TheBitBrine
             {
                 Stream Input;
                 Input = StringToStream(Response);
+                Context.Response.ContentEncoding = Encoding.UTF8;
+                Context.Response.ContentType =  "charset=utf-8";
                 Context.Response.ContentLength64 = Input.Length;
                 byte[] buffer = new byte[1024 * 16];
                 int nbytes;
@@ -172,11 +175,13 @@ namespace TheBitBrine
             try
             {
                 Stream Input;
-
+                //Encoding.
 
                 Input = StringToStream(Response);
 
-                Context.Response.ContentType = ContentType;
+                Context.Response.ContentEncoding = Encoding.UTF8;
+                Context.Response.ContentType = ((ContentType + ";").Replace(";;", ";")) + " charset=utf-8";
+
                 Context.Response.ContentLength64 = Input.Length;
                 byte[] buffer = new byte[1024 * 16];
                 int nbytes;
@@ -196,7 +201,9 @@ namespace TheBitBrine
         {
             try
             {
-                Context.Response.ContentType = ContentType;
+                Context.Response.ContentEncoding = Encoding.UTF8;
+                Context.Response.ContentType = ((ContentType + ";").Replace(";;", ";")) + " charset=utf-8";
+
                 Context.Response.ContentLength64 = Response.Length;
                 byte[] buffer = new byte[1024 * 16];
                 int nbytes;
@@ -216,7 +223,9 @@ namespace TheBitBrine
         {
             try
             {
-                Context.Response.ContentType = ContentType;
+                Context.Response.ContentEncoding = Encoding.UTF8;
+                Context.Response.ContentType = ((ContentType + ";").Replace(";;", ";")) + " charset=utf-8";
+
                 Context.Response.ContentLength64 = Response.Length;
                 byte[] buffer = new byte[1024 * 16];
                 int nbytes;

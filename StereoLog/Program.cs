@@ -7,6 +7,7 @@ using TheBitBrine;
 using static StereoLog.Toolbox;
 using static StereoLog.Emoji;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace StereoLog
 {
@@ -20,13 +21,16 @@ namespace StereoLog
 
         public static QuickMan API;
         public static Dictionary<string, string> Emojis = GetEmojis();
+        public static string[] EmojiKeys = Emojis.Keys.ToArray();
+        public static string[] EmojiVals = Emojis.Values.ToArray();
+
         public void Run()
         {
             GetUpdates();
             API = new QuickMan();
             var Endpoints = new Dictionary<string, Action<HttpListenerContext>>();
 
-            Endpoints.Add("/", Index);
+            Endpoints.Add("/", Index2);
 
             Endpoints.Add("read", Read);
 
@@ -36,37 +40,37 @@ namespace StereoLog
 
         public void Index(HttpListenerContext Context)
         {
-            var HTML = File.ReadAllText("HTML/index.html");
+            var HTML = GetPage();
             var Articles = GetArticles();
             var Elements = GetElements();
             var Page = 1;
             if (Context.Request.QueryString.AllKeys.Contains("page"))
                 int.TryParse(Context.Request.QueryString["page"], out Page);
 
-            var ArticleHTML = "";
-            foreach (var Article in Articles.Skip((Page - 1) * 10).Take(10))
-            {
+            //var ArticleHTML = "";
+            //foreach (var Article in Articles.Skip((Page - 1) * 10).Take(10))
+            //{
 
-                foreach (var Element in GetHashTags(HTML))
-                {
-                    var iHTMLTemp = Elements.Where(x => x.Name.ToLower().Contains(Element.ToLower()));
-                    if (iHTMLTemp.Any())
-                    {
-                        var iHTML = iHTMLTemp.First().RawHTML;
-                        var DeclaredMembers = Article.GetType().GetFields();
-                        foreach (var Member in DeclaredMembers)
-                        {
-                            if (Member.MemberType == MemberTypes.Field)
-                            {
-                                var Field = Article.GetType().GetField(Member.Name);
-                                if (Field != null)
-                                    HTML = HTML.Replace($"##{Element.ToUpper()}##", iHTML.Replace($"##{Member.Name.ToUpper()}##", Field.GetValue(Article).ToString()));
-                            }
-                        }
-                    }
+            //    foreach (var Element in GetHashTags(HTML))
+            //    {
+            //        var iHTMLTemp = Elements.Where(x => x.Name.ToLower().Contains(Element.ToLower()));
+            //        if (iHTMLTemp.Any())
+            //        {
+            //            var iHTML = iHTMLTemp.First().RawHTML;
+            //            var DeclaredMembers = Article.GetType().GetFields();
+            //            foreach (var Member in DeclaredMembers)
+            //            {
+            //                if (Member.MemberType == MemberTypes.Field)
+            //                {
+            //                    var Field = Article.GetType().GetField(Member.Name);
+            //                    if (Field != null)
+            //                        HTML = HTML.Replace($"##{Element.ToUpper()}##", iHTML.Replace($"##{Member.Name.ToUpper()}##", Field.GetValue(Article).ToString()));
+            //                }
+            //            }
+            //        }
 
-                }
-            }
+            //    }
+            //}
 
             var SideBarHTML = "";
             foreach (var Article in Articles)
@@ -82,7 +86,7 @@ namespace StereoLog
             }
 
             HTML = HTML.Replace("##SIDEBAR.ITEM##", SideBarHTML);
-            HTML = HTML.Replace("##ARTICLE.ITEM##", ArticleHTML);
+            //HTML = HTML.Replace("##ARTICLE.ITEM##", ArticleHTML);
 
 
 
@@ -94,9 +98,12 @@ namespace StereoLog
             API.Respond(HTML, "text/html", Context);
         }
 
+
         public void Index2(HttpListenerContext Context)
         {
-            var HTML = File.ReadAllText("HTML/index.html");
+            var sw = new Stopwatch();
+            sw.Start();
+            var HTML = GetPage();
             var Articles = GetArticles();
             var Elements = GetElements();
             var Page = 1;
@@ -104,7 +111,7 @@ namespace StereoLog
                 int.TryParse(Context.Request.QueryString["page"], out Page);
 
             var ArticleHTML = "";
-            foreach (var Article in Articles.Skip((Page - 1) * 10).Take(10))
+            foreach (var Article in Articles)
             {
                 var property = Article.GetType().GetFields();
                 var iHTML = Elements.First(x => x.Name.Contains("article")).RawHTML;
@@ -143,15 +150,19 @@ namespace StereoLog
 
             for (int i = 0; i < Emojis.Count(); i++)
             {
-                HTML = HTML.Replace($":{Emojis.Keys.ToList()[i]}:", Emojis.Values.ToList()[i]);
+                HTML = HTML.Replace($":{EmojiKeys[i]}:", EmojiVals[i]);
             }
+
+            HTML = HTML.Replace("##STATUS##", $"[{sw.ElapsedMilliseconds:n0} ms]");
 
             API.Respond(HTML, "text/html", Context);
         }
 
         public void Read(HttpListenerContext Context)
         {
-            var HTML = File.ReadAllText("HTML/index.html");
+            var sw = new Stopwatch();
+            sw.Start();
+            var HTML = GetPage();
             var Articles = GetArticles();
             var Elements = GetElements();
 
@@ -183,13 +194,22 @@ namespace StereoLog
             HTML = HTML.Replace("##ARTICLE.ITEM##", ArticleHTML);
             HTML = HTML.Replace("##READMORE.ITEM##", "");
 
-
             for (int i = 0; i < Emojis.Count(); i++)
             {
-                HTML = HTML.Replace($":{Emojis.Keys.ToList()[i]}:", Emojis.Values.ToList()[i]);
+                HTML = HTML.Replace($":{EmojiKeys[i]}:", EmojiVals[i]);
             }
 
+            HTML = HTML.Replace("##STATUS##", $"[{sw.ElapsedMilliseconds:n0} ms]");
             API.Respond(HTML, "text/html", Context);
+        }
+
+        public static string GetPage()
+        {
+            var HTML = File.ReadAllText("HTML/index.html");
+            var CSS = File.ReadAllText("HTML/css/thebitbrine.css");
+            CSS = CSS.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+            return HTML.Replace("##CSS##", CSS);
+            //return HTML;
         }
 
     }
